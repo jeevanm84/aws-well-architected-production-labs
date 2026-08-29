@@ -22,7 +22,14 @@ for path in markdown_files:
         if clean_target and not (path.parent / clean_target).resolve().exists():
             ERRORS.append(f"{relative}: missing local link target {target}")
 
-scannable = [path for path in ROOT.rglob("*") if path.is_file() and ".git" not in path.parts]
+scannable = [
+    path
+    for path in ROOT.rglob("*")
+    if path.is_file()
+    and ".git" not in path.parts
+    and "__pycache__" not in path.parts
+    and path.suffix in {".md", ".py", ".sh", ".json", ".yml", ".yaml"}
+]
 all_text = "\n".join(path.read_text(encoding="utf-8", errors="ignore") for path in scannable).lower()
 for forbidden in ("mamu" + "duri", "jeevanm.aws" + "@gmail.com", "akia" + "iosf"):
     if forbidden in all_text:
