@@ -1,0 +1,26 @@
+name: Assessment or lab defect
+description: Report incorrect behavior or guidance without sensitive AWS data.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include account IDs, credentials, private endpoints, production logs, or confidential diagrams.
+  - type: input
+    id: location
+    attributes:
+      label: Scenario, lab, script, or document
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Sanitized reproduction or reasoning
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior or guidance
+    validations:
+      required: true

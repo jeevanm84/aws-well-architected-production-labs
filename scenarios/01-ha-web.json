@@ -1,0 +1,76 @@
+{
+  "id": "01-ha-web",
+  "title": "Highly available public web platform",
+  "problem": "Serve a customer-facing application through routine instance and single-AZ failures without exposing application or database hosts directly to the internet.",
+  "requirements": {
+    "availability": "99.9% monthly target with no single-instance dependency",
+    "rto_minutes": 30,
+    "rpo_minutes": 5,
+    "security": "TLS, private compute/data tiers, least privilege, encrypted data and auditable access",
+    "cost": "Cost-aware baseline with reliability investments identified separately"
+  },
+  "architecture": {
+    "summary": "Route 53 and an internet-facing ALB distribute requests to an Auto Scaling group across two private-subnet AZs; managed data services remain isolated and observable.",
+    "services": ["Route 53", "AWS WAF", "Application Load Balancer", "EC2 Auto Scaling", "Systems Manager", "RDS Multi-AZ", "Secrets Manager", "CloudWatch"],
+    "data_flow": ["Client to TLS edge", "ALB to healthy private targets", "Application to managed database", "Telemetry to operations"]
+  },
+  "pillars": {
+    "operational_excellence": {
+      "decisions": ["Infrastructure and alarms are reviewed as code", "Runbooks cover target, AZ and database failures"],
+      "evidence": ["Deployment events", "Synthetic checks", "Quarterly game-day findings"]
+    },
+    "security": {
+      "decisions": ["No inbound SSH or public instance addresses", "Short-lived administrative and workload identity"],
+      "evidence": ["Access Analyzer findings", "CloudTrail events", "WAF and application security signals"]
+    },
+    "reliability": {
+      "decisions": ["Minimum two targets across AZs", "Managed synchronous database standby for the stated RPO"],
+      "evidence": ["Healthy-host count", "AZ evacuation exercise", "Restore and failover timing"]
+    },
+    "performance_efficiency": {
+      "decisions": ["Scale stateless compute from measured demand", "Use caching only after access-pattern measurement"],
+      "evidence": ["Latency percentiles", "Target response time", "Load-test saturation point"]
+    },
+    "cost_optimization": {
+      "decisions": ["Separate learning and resilience profiles", "Right-size from utilization and load tests"],
+      "evidence": ["Cost allocation tags", "Cost per request", "Idle and commitment coverage reports"]
+    },
+    "sustainability": {
+      "decisions": ["Scale capacity with demand", "Use managed services and efficient instance families where requirements permit"],
+      "evidence": ["Average utilization", "Idle capacity", "Data-retention lifecycle"]
+    }
+  },
+  "failure_modes": [
+    {
+      "incident": "One application instance terminates",
+      "impact": "Capacity decreases but traffic continues through the remaining healthy target",
+      "detection": "Healthy-host and desired-capacity alarms",
+      "mitigation": "Auto Scaling replaces the target and the ALB routes only to healthy instances",
+      "prevention": "Minimum multi-instance capacity, health checks and replacement testing"
+    },
+    {
+      "incident": "One Availability Zone is impaired",
+      "impact": "Load shifts to remaining AZ and may approach capacity limits",
+      "detection": "AZ-aware target, latency, error and dependency metrics",
+      "mitigation": "Scale remaining capacity and follow the AZ impairment runbook",
+      "prevention": "Multi-AZ placement, sufficient failover headroom and game days"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "HA-001",
+      "decision": "Use an ALB and Auto Scaling group across two AZs",
+      "trade_off": "Higher baseline cost than a single host; removes a single compute dependency",
+      "revisit_when": "Traffic, latency, protocol, regional or edge requirements change"
+    },
+    {
+      "id": "HA-002",
+      "decision": "Keep instances private and use Systems Manager",
+      "trade_off": "Requires controlled egress/endpoints and SSM operational dependency",
+      "revisit_when": "Organization access architecture or endpoint policy changes"
+    }
+  ],
+  "verification": ["Load test at normal and failover capacity", "Terminate one target and measure recovery", "Simulate AZ target loss", "Restore database backup and measure RTO/RPO", "Run synthetic HTTP and business-transaction checks"],
+  "cost_controls": ["Budgets and anomaly detection", "Owner/environment/cost tags", "Right-sizing review", "NAT and cross-AZ transfer review", "Log retention policy"],
+  "production_readiness": ["DNS and certificate lifecycle owned", "Quotas reviewed", "Runbooks tested", "Backups restored", "SLO and alert routing approved", "Security threat model reviewed"]
+}

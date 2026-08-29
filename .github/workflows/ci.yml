@@ -1,0 +1,30 @@
+name: Architecture CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: architecture-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate architecture evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Compile Python tools
+        run: python3 -m compileall -q scripts simulators tests
+
+      - name: Run offline architecture checks
+        run: ./scripts/check.sh

@@ -1,0 +1,6 @@
+.DS_Store
+.idea/
+.env
+*.log
+__pycache__/
+*.pyc

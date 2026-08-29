@@ -1,0 +1,36 @@
+{
+  "id": "02-event-orders",
+  "title": "Event-driven order processing",
+  "problem": "Accept orders quickly while isolating downstream processing failures, controlling retries, and preventing duplicate business effects.",
+  "requirements": {
+    "availability": "Order intake remains available during transient worker failure",
+    "rto_minutes": 15,
+    "rpo_minutes": 0,
+    "security": "Authenticated producers/consumers, encrypted queues, minimized payload data and auditable access",
+    "cost": "Scale consumers with backlog and avoid permanently idle peak capacity"
+  },
+  "architecture": {
+    "summary": "API intake persists the accepted operation and publishes to an encrypted queue; idempotent consumers process with bounded retries and a dead-letter queue.",
+    "services": ["API Gateway", "Lambda", "SQS", "DynamoDB", "KMS", "CloudWatch"],
+    "data_flow": ["Validated request to durable acceptance", "Message to queue", "Consumer to idempotency store", "Failed message to DLQ", "DLQ alarm to operations"]
+  },
+  "pillars": {
+    "operational_excellence": {"decisions": ["DLQ ownership and replay runbook are mandatory"], "evidence": ["Age-of-oldest-message", "DLQ depth", "Replay audit trail"]},
+    "security": {"decisions": ["Queue and data-store policies allow only named producers and consumers"], "evidence": ["CloudTrail events", "KMS and IAM policy analysis"]},
+    "reliability": {"decisions": ["At-least-once delivery is paired with idempotent effects and bounded retries"], "evidence": ["Duplicate delivery test", "Poison-message test", "Backlog recovery time"]},
+    "performance_efficiency": {"decisions": ["Consumer concurrency follows downstream capacity and backlog target"], "evidence": ["Processing latency", "Throttle rate", "Concurrency and saturation"]},
+    "cost_optimization": {"decisions": ["Event-driven consumers scale to demand rather than fixed peak"], "evidence": ["Cost per order", "Empty receives", "Data transfer and payload size"]},
+    "sustainability": {"decisions": ["Batch operations where latency permits and remove redundant payload data"], "evidence": ["Batch utilization", "Compute duration", "Payload bytes"]}
+  },
+  "failure_modes": [
+    {"incident": "Consumer dependency throttles", "impact": "Queue backlog and order completion latency increase", "detection": "Throttles, errors and message age", "mitigation": "Reduce concurrency, preserve messages and recover backlog within the SLO", "prevention": "Backpressure, downstream quota planning and load tests"},
+    {"incident": "Poison message repeatedly fails", "impact": "One operation cannot complete and may consume retry capacity", "detection": "Receive count and DLQ alarm", "mitigation": "Quarantine in DLQ, diagnose safely and replay only after correction", "prevention": "Schema validation, bounded retries and replay tooling"}
+  ],
+  "decisions": [
+    {"id": "EVT-001", "decision": "Use an at-least-once queue and application idempotency key", "trade_off": "Additional state and expiry design prevents duplicate business effects", "revisit_when": "Ordering or exactly-once business requirements change"},
+    {"id": "EVT-002", "decision": "Route exhausted retries to a DLQ", "trade_off": "Requires ownership and safe replay; prevents infinite retry loops", "revisit_when": "Failure classes or recovery automation change"}
+  ],
+  "verification": ["Duplicate-message test", "Transient dependency failure", "Poison-message DLQ flow", "Backlog load/recovery test", "Replay audit test"],
+  "cost_controls": ["Concurrency limits", "Payload-size review", "Retention policy", "Cost per completed order", "Unused queue and alarm inventory"],
+  "production_readiness": ["Idempotency contract documented", "DLQ alarm owned", "Replay authorized and audited", "Downstream quotas reviewed", "Backlog SLO defined"]
+}

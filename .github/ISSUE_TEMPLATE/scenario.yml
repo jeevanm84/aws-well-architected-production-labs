@@ -1,0 +1,29 @@
+name: Architecture scenario
+description: Propose a measurable AWS architecture or failure exercise.
+title: "[Scenario]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Business problem and critical journey
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Availability, RTO/RPO, security, performance and cost requirements
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: Failure mode to investigate
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or verification learners should produce
+    validations:
+      required: true

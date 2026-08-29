@@ -1,0 +1,36 @@
+{
+  "id": "05-cost-capacity-incident",
+  "title": "Cost and capacity incident",
+  "problem": "A workload's daily cost triples while latency and error rate also increase; the team must contain impact without blindly removing resilience capacity.",
+  "requirements": {
+    "availability": "Mitigation must preserve the customer SLO and minimum failure headroom",
+    "rto_minutes": 30,
+    "rpo_minutes": 0,
+    "security": "Cost investigation uses read-only evidence and preserves auditability",
+    "cost": "Return unit cost to the approved range and prevent recurrence"
+  },
+  "architecture": {
+    "summary": "Cost allocation, usage telemetry, anomaly alerts and workload performance data are correlated by owner, service, operation and deployment.",
+    "services": ["Cost Explorer", "Cost and Usage Report", "Cost Anomaly Detection", "Budgets", "CloudWatch", "CloudTrail", "Compute Optimizer"],
+    "data_flow": ["Billing and usage to cost analytics", "Workload metrics to operations", "Deployment events to correlation", "Approved changes to capacity policy"]
+  },
+  "pillars": {
+    "operational_excellence": {"decisions": ["Cost anomalies are operational signals with named owners"], "evidence": ["Alert timeline", "Deployment changes", "Post-incident actions"]},
+    "security": {"decisions": ["Investigation roles are read-only and remediation remains reviewed"], "evidence": ["Session and change audit", "Policy boundaries"]},
+    "reliability": {"decisions": ["Do not reduce below tested failover headroom during containment"], "evidence": ["SLO/error budget", "Capacity during failure test"]},
+    "performance_efficiency": {"decisions": ["Correlate saturation and scaling before resizing"], "evidence": ["CPU/memory/queue/latency", "Scaling activity", "Load profile"]},
+    "cost_optimization": {"decisions": ["Track cost per successful business transaction"], "evidence": ["Unit cost", "Unallocated spend", "Idle and commitment coverage"]},
+    "sustainability": {"decisions": ["Remove redundant work and idle capacity after reliability review"], "evidence": ["Utilization", "Duplicate requests", "Data retention"]}
+  },
+  "failure_modes": [
+    {"incident": "Retry storm multiplies requests", "impact": "Compute, network and dependency cost rise while latency worsens", "detection": "Request amplification, retry count and cost anomaly", "mitigation": "Bound retries, add jitter/backpressure and protect dependency", "prevention": "Retry budgets, load/failure tests and circuit breakers"},
+    {"incident": "Scaling policy oscillates", "impact": "Capacity churn, instability and unnecessary cost", "detection": "Frequent scale events and metric lag", "mitigation": "Stabilize capacity and correct target/cooldown", "prevention": "Representative load tests and multi-signal scaling review"}
+  ],
+  "decisions": [
+    {"id": "COST-001", "decision": "Optimize unit economics after identifying the workload driver", "trade_off": "Requires allocation and business-volume data beyond the AWS bill", "revisit_when": "Business transaction or architecture changes"},
+    {"id": "COST-002", "decision": "Preserve tested failover minimum during emergency cost containment", "trade_off": "Some spend remains while availability risk is controlled", "revisit_when": "Business accepts a different reliability target"}
+  ],
+  "verification": ["Correlate anomaly start with changes", "Calculate cost per successful transaction", "Reproduce scaling/retry behavior", "Verify mitigation under load", "Run single-failure capacity test"],
+  "cost_controls": ["Owner tags and account allocation", "Anomaly alerts", "Budget thresholds", "Unit-cost dashboard", "Idle resource lifecycle", "Commitment coverage review"],
+  "production_readiness": ["Cost owner named", "Unit metric defined", "Anomaly route tested", "Reliability floor approved", "Remediation rollback documented"]
+}

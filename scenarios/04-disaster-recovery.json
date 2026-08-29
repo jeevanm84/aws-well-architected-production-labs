@@ -1,0 +1,36 @@
+{
+  "id": "04-disaster-recovery",
+  "title": "Regional disaster-recovery strategy",
+  "problem": "Recover a revenue-critical application from regional unavailability within approved recovery objectives using evidence rather than an untested architecture diagram.",
+  "requirements": {
+    "availability": "Regional recovery path with quarterly evidence",
+    "rto_minutes": 60,
+    "rpo_minutes": 15,
+    "security": "Recovery preserves identity, encryption, logging, data classification and change control",
+    "cost": "Pilot-light baseline with explicit scale-up cost and business approval"
+  },
+  "architecture": {
+    "summary": "Infrastructure definitions, immutable artifacts, replicated data and minimal regional dependencies support controlled pilot-light activation and DNS traffic shift.",
+    "services": ["Route 53", "S3 replication", "RDS cross-Region replica or backup copy", "ECR replication", "KMS multi-Region design", "CloudFormation or Terraform", "CloudWatch"],
+    "data_flow": ["Primary data to recovery region", "Artifacts to recovery registry/bucket", "Recovery automation creates capacity", "Verification precedes traffic shift"]
+  },
+  "pillars": {
+    "operational_excellence": {"decisions": ["Recovery is a versioned runbook with named decision authority"], "evidence": ["Quarterly exercise", "Recovery timeline", "Action-item closure"]},
+    "security": {"decisions": ["Recovery identity, keys, secrets and logs are available without weakening controls"], "evidence": ["Access test", "Decryption test", "Audit event continuity"]},
+    "reliability": {"decisions": ["Pilot light matches 60/15-minute objectives after measured scale-up"], "evidence": ["Restore duration", "Replication lag", "End-to-end transaction test"]},
+    "performance_efficiency": {"decisions": ["Recovery capacity scaling is load-tested before an incident"], "evidence": ["Scale-up curve", "Failover latency", "Dependency saturation"]},
+    "cost_optimization": {"decisions": ["Pilot light selected over warm standby after business-impact analysis"], "evidence": ["Steady-state recovery cost", "Exercise cost", "Estimated incident scale-up"]},
+    "sustainability": {"decisions": ["Recovery retains only justified standby capacity and data"], "evidence": ["Idle capacity", "Backup lifecycle", "Artifact retention"]}
+  },
+  "failure_modes": [
+    {"incident": "Primary Region unavailable", "impact": "Customer transactions fail until recovery is activated", "detection": "Multi-signal regional and business-transaction evidence", "mitigation": "Declare disaster, activate pilot light, verify dependencies and shift traffic", "prevention": "Quarterly timed exercises and dependency inventory"},
+    {"incident": "Replicated data is corrupt or too stale", "impact": "Recovery violates integrity or RPO", "detection": "Replication lag, consistency validation and restore test", "mitigation": "Select verified recovery point and communicate data-loss window", "prevention": "Point-in-time recovery, immutable backups and application reconciliation design"}
+  ],
+  "decisions": [
+    {"id": "DR-001", "decision": "Use pilot light rather than backup/restore or warm standby", "trade_off": "Moderate ongoing cost with more activation work than warm standby", "revisit_when": "RTO, revenue impact or scale-up evidence changes"},
+    {"id": "DR-002", "decision": "Shift traffic only after automated business verification", "trade_off": "May add minutes to recovery while reducing failed cutover risk", "revisit_when": "Verification becomes the dominant RTO component"}
+  ],
+  "verification": ["Restore latest acceptable recovery point", "Recreate capacity from versioned code", "Verify identity/secrets/keys", "Run customer-transaction canary", "Measure DNS and dependency cutover", "Exercise failback"],
+  "cost_controls": ["Approved DR tier by workload", "Backup and replica lifecycle", "Exercise budget", "Standby capacity inventory", "Recovery-region data transfer review"],
+  "production_readiness": ["RTO/RPO business-approved", "Dependency inventory complete", "Decision authority named", "Recovery and failback tested", "Data reconciliation owned"]
+}

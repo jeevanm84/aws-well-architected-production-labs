@@ -1,0 +1,36 @@
+{
+  "id": "03-multi-account-security",
+  "title": "Multi-account security foundation",
+  "problem": "Separate production, non-production, security and log responsibilities while maintaining centralized identity, guardrails, evidence and break-glass recovery.",
+  "requirements": {
+    "availability": "Identity and security operations retain documented recovery paths",
+    "rto_minutes": 60,
+    "rpo_minutes": 15,
+    "security": "Federated workforce access, least privilege, immutable central logs, preventive and detective guardrails",
+    "cost": "Account-level ownership and allocation without duplicating unnecessary shared services"
+  },
+  "architecture": {
+    "summary": "AWS Organizations separates workload and security accounts; IAM Identity Center provides federated access; organization trails and security findings flow to protected accounts.",
+    "services": ["AWS Organizations", "IAM Identity Center", "CloudTrail", "AWS Config", "GuardDuty", "Security Hub", "S3", "KMS", "EventBridge"],
+    "data_flow": ["Identity provider to permission set", "Organization activity to log archive", "Findings to security tooling account", "Approved response to workload account"]
+  },
+  "pillars": {
+    "operational_excellence": {"decisions": ["Account vending, ownership and closure are automated and documented"], "evidence": ["Account inventory", "Guardrail deployment status", "Runbook exercises"]},
+    "security": {"decisions": ["Human access is federated and temporary; log archive administration is separated"], "evidence": ["Access reports", "Organization trail delivery", "GuardDuty/Security Hub findings"]},
+    "reliability": {"decisions": ["Break-glass paths are isolated, monitored and exercised"], "evidence": ["Identity outage game day", "Log delivery health", "Recovery timing"]},
+    "performance_efficiency": {"decisions": ["Central services are selected only where centralization improves scale or control"], "evidence": ["Finding ingestion latency", "Automation throughput"]},
+    "cost_optimization": {"decisions": ["Account ownership and cost allocation are mandatory at creation"], "evidence": ["Unallocated spend", "Shared-service unit cost", "Idle account inventory"]},
+    "sustainability": {"decisions": ["Unused accounts and retained data follow lifecycle policy"], "evidence": ["Account closure backlog", "Log lifecycle and retrieval requirements"]}
+  },
+  "failure_modes": [
+    {"incident": "Federated identity provider unavailable", "impact": "Normal administrative access fails", "detection": "Authentication failures and identity health signals", "mitigation": "Use monitored break-glass access under incident authorization", "prevention": "Tested emergency path, multiple responsible operators and protected credentials"},
+    {"incident": "Organization trail stops delivering", "impact": "Security evidence becomes incomplete", "detection": "Delivery error and expected-event canary", "mitigation": "Restore delivery and preserve alternate evidence", "prevention": "Protected trail configuration, alerts and periodic validation"}
+  ],
+  "decisions": [
+    {"id": "SEC-001", "decision": "Separate log archive and security tooling accounts from workloads", "trade_off": "Operational complexity increases while blast radius and administrative conflict decrease", "revisit_when": "Organization/regulatory boundaries change"},
+    {"id": "SEC-002", "decision": "Use federated short-lived sessions instead of IAM users", "trade_off": "Identity provider availability becomes an explicit dependency", "revisit_when": "Identity architecture or machine-access requirements change"}
+  ],
+  "verification": ["Provision a sandbox account through the approved process", "Attempt prohibited actions", "Trace one activity event to central logs", "Simulate identity outage", "Exercise one finding response"],
+  "cost_controls": ["Account owner and cost center", "Shared-service chargeback model", "Log lifecycle tiers", "Idle account detection", "Service opt-in review"],
+  "production_readiness": ["OU and SCP ownership defined", "Break-glass tested", "Log integrity controls reviewed", "Finding routing owned", "Account closure process tested"]
+}
