@@ -22,7 +22,7 @@ The labs use the six current AWS Well-Architected pillars: operational excellenc
 ## Architecture review system
 
 ```mermaid
-flowchart LR
+flowchart TB
   Requirement[Business and technical requirements] --> Scenario[Structured scenario JSON]
   Scenario --> Decisions[Architecture decisions and trade-offs]
   Decisions --> Pillars[Six-pillar assessment]

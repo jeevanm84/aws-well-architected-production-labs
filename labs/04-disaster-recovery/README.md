@@ -5,7 +5,7 @@
 Select and prove a regional recovery strategy for a workload with a 60-minute RTO and 15-minute RPO.
 
 ```mermaid
-flowchart LR
+flowchart TB
   Primary[Primary Region] -->|data + artifacts + definitions| Recovery[Pilot-light Region]
   Declare[Incident declaration] --> Scale[Create/scale recovery capacity]
   Scale --> Verify[Identity + data + transaction verification]

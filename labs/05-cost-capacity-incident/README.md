@@ -5,7 +5,7 @@
 Daily cost triples while latency and error rate rise. Leadership asks for immediate cost reduction without a reliability assessment.
 
 ```mermaid
-flowchart LR
+flowchart TB
   Cost[Billing + unit cost] --> Correlate[Correlate timeline]
   Telemetry[Latency + errors + saturation] --> Correlate
   Changes[Deployments + configuration] --> Correlate

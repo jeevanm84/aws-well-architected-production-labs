@@ -5,7 +5,7 @@
 Decouple order intake from processing while preserving durable work and preventing duplicate effects.
 
 ```mermaid
-flowchart LR
+flowchart TB
   Client --> API[API intake]
   API --> Queue[SQS queue]
   Queue --> Worker[Idempotent consumer]
